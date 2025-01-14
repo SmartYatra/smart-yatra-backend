@@ -26,8 +26,9 @@ class AuthController extends BaseController
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required',
                 'c_password' => 'required|same:password',
+                'user_type' => 'required|in:user,admin,driver',
             ]);
-    
+
             if ($validator->fails()) {
                 return $this->sendError(
                     'Validation Error: ',
@@ -36,14 +37,21 @@ class AuthController extends BaseController
                 );
             }
             $input = $request->all();
-            $input['password'] = bcrypt($input['password']);
-            $user = User::create($input);
-    
+
+            $user = User::create([
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'password' => bcrypt($input['password']),
+                'type' => $input['user_type']
+            ]);
+
+
             $success = [
                 'token' => $user->createToken('MyApp')->accessToken,
                 'name' => $user->name,
+                'user_type' => $user->type,
             ];
-    
+
             return $this->sendResponse($success, 'User registered successfully.');
         } catch (\Exception $e) {
             return $this->sendError(
@@ -53,53 +61,53 @@ class AuthController extends BaseController
             );
         }
     }
-    
 
 
-/**
- * Login API
- *
- * @param \Illuminate\Http\Request $request
- * @return \Illuminate\Http\JsonResponse
- */
-public function login(Request $request): JsonResponse
-{
-    try {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
 
-        if ($validator->fails()) {
+    /**
+     * Login API
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function login(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email',
+                'password' => 'required',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError(
+                    'Validation Error: ',
+                    [$validator->errors()],
+                    400
+                );
+            }
+
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
+                $success = [
+                    'token' => $user->createToken('MyApp')->accessToken,
+                    'name' => $user->name,
+                    'type' => $user->type,
+                ];
+
+                return $this->sendResponse($success, 'User logged in successfully.');
+            } else {
+                return $this->sendError(
+                    'Unauthorized.',
+                    ['error' => 'Invalid email or password.'],
+                    401
+                );
+            }
+        } catch (\Exception $e) {
             return $this->sendError(
-                'Validation Error: ',
-                [$validator->errors()],
-                400
+                'An error occurred while processing your request.',
+                [$e->getMessage()],
+                500
             );
         }
-
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            $user = Auth::user();
-            $success = [
-                'token' => $user->createToken('MyApp')->accessToken,
-                'name' => $user->name,
-            ];
-
-            return $this->sendResponse($success, 'User logged in successfully.');
-        } else {
-            return $this->sendError(
-                'Unauthorized.',
-                ['error' => 'Invalid email or password.'],
-                401
-            );
-        }
-    } catch (\Exception $e) {
-        return $this->sendError(
-            'An error occurred while processing your request.',
-            [$e->getMessage()],
-            500
-        );
     }
-}
-
 }
