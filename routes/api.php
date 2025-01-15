@@ -2,8 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-  
+
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\BusController;
 use App\Http\Controllers\RouteController;
 
 /*
@@ -16,10 +17,11 @@ use App\Http\Controllers\RouteController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-  
+
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-     
-Route::middleware('auth:api')->group( function () {
-   Route::apiResource('route',RouteController::class);
+
+Route::middleware('auth:api')->group(function () {
+   Route::apiResource('routes', RouteController::class);
+   Route::apiResource('buses', BusController::class);
 });
