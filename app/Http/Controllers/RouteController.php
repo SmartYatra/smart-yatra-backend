@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\API\BaseController;
 use App\Models\Route;
+use App\Models\Stop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Validator;
@@ -17,7 +18,22 @@ class RouteController extends BaseController
      */
     public function index()
     {
-        $routes = Route::all();
+        $routes = Route::with('stops')->get();
+
+        // Sort the stops for each route in ascending order of 'order'
+        $routes = $routes->map(function ($route) {
+            $route = $route->stops->sortBy('pivot.order')->map(function ($stop) {
+                return [
+                    'id' => $stop->id,
+                    'name' => $stop->name,
+                    'location_lng' => $stop->location_lng,
+                    'location_lat' => $stop->location_lat,
+                    'order' => $stop->pivot->order,
+                ];
+            });
+            return $route;
+        });
+
         return $this->sendResponse($routes, 'Routes retrieved successfully.');
     }
 
@@ -36,6 +52,9 @@ class RouteController extends BaseController
             'status' => 'required',
             'distance' => 'required|numeric',
             'duration' => 'required|numeric',
+            'stops.*.location_lat' => 'required|numeric',
+            'stops.*.location_lng' => 'required|numeric',
+            'stops.*.order' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -43,7 +62,30 @@ class RouteController extends BaseController
         }
 
         // Create the route
-        $route = Route::create($request->all());
+        $route = Route::create($request->except('stops'));
+
+        // Add stops to the route
+        foreach ($request->stops as $stopData) {
+            // Create each stop
+            $stop = Stop::create($stopData);
+
+            // Attach the stop to the route with the specified order
+            $route->stops()->attach($stop->id, ['order' => $stopData['order']]);
+        }
+
+        // Load the stops with the pivot data (order)
+        $route->load('stops');
+
+        // Sort the stops by 'order' and format the response
+        $route = $route->stops->sortBy('pivot.order')->map(function ($stop) {
+            return [
+                'id' => $stop->id,
+                'name' => $stop->name,
+                'location_lng' => $stop->location_lng,
+                'location_lat' => $stop->location_lat,
+                'order' => $stop->pivot->order, // Add the order field from the pivot table
+            ];
+        });
 
         return $this->sendResponse($route, 'Route created successfully.', 201);
     }
@@ -56,6 +98,20 @@ class RouteController extends BaseController
      */
     public function show(Route $route)
     {
+        // Load the stops with the pivot data (order)
+        $route->load('stops');
+
+        // Sort the stops by 'order' and format the response
+        $route = $route->stops->sortBy('pivot.order')->map(function ($stop) {
+            return [
+                'id' => $stop->id,
+                'name' => $stop->name,
+                'location_lng' => $stop->location_lng,
+                'location_lat' => $stop->location_lat,
+                'order' => $stop->pivot->order,
+            ];
+        });
+
         return $this->sendResponse($route, 'Route retrieved successfully.');
     }
 
@@ -75,6 +131,9 @@ class RouteController extends BaseController
             'status' => 'required',
             'distance' => 'required|numeric',
             'duration' => 'required|numeric',
+            'stops.*.location_lat' => 'required|numeric',
+            'stops.*.location_lng' => 'required|numeric',
+            'stops.*.order' => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -82,7 +141,33 @@ class RouteController extends BaseController
         }
 
         // Update the route
-        $route->update($request->all());
+        $route->update($request->except('stops'));
+
+        // If stops data is provided, handle updating or attaching new stops
+        if ($request->has('stops')) {
+            foreach ($request->stops as $stopData) {
+                // Create each stop if it does not exist or update it
+                $stop = Stop::firstOrCreate(
+                    ['location_lng' => $stopData['location_lng'], 'location_lat' => $stopData['location_lat']],
+                    $stopData
+                );
+                $route->stops()->syncWithoutDetaching([$stop->id => ['order' => $stopData['order']]]);
+            }
+        }
+
+        // Load the stops with the pivot data (order)
+        $route->load('stops');
+
+        // Sort the stops by 'order' and format the response
+        $route->stops = $route->stops->sortBy('pivot.order')->map(function ($stop) {
+            return [
+                'id' => $stop->id,
+                'name' => $stop->name,
+                'location_lng' => $stop->location_lng,
+                'location_lat' => $stop->location_lat,
+                'order' => $stop->pivot->order,
+            ];
+        });
 
         return $this->sendResponse($route, 'Route updated successfully.');
     }
@@ -95,6 +180,9 @@ class RouteController extends BaseController
      */
     public function destroy(Route $route)
     {
+        // Detach all related stops before deleting the route
+        $route->stops()->detach();
+
         // Delete the route
         $route->delete();
 

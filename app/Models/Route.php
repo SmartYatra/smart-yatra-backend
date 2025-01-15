@@ -25,7 +25,7 @@ class Route extends Model
      */
     public function stops()
     {
-        return $this->hasMany(Stop::class, 'route_stop')
+        return $this->belongsToMany(Stop::class, 'route_stop')
             ->withPivot('order'); //withPivot retrives the order column from the pivot table 'route_stop'
     }
 

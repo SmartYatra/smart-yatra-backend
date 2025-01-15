@@ -15,8 +15,8 @@ class Stop extends Model
      */
     protected $fillable = [
         'name',
-        'lattitude',
-        'longitude'
+        'location_lat',
+        'location_lng'
     ];
     /**
      * The routes that the stop belongs to.
