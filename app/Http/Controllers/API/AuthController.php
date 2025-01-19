@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Http\JsonResponse;
+use DB;
 
 class AuthController extends BaseController
 {
@@ -20,6 +21,7 @@ class AuthController extends BaseController
      */
     public function register(Request $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required',
@@ -51,9 +53,10 @@ class AuthController extends BaseController
                 'name' => $user->name,
                 'user_type' => $user->type,
             ];
-
+            DB::commit();
             return $this->sendResponse($success, 'User registered successfully.');
         } catch (\Exception $e) {
+            DB::rollback();
             return $this->sendError(
                 'An error occurred while processing your request.',
                 [$e->getMessage()],
