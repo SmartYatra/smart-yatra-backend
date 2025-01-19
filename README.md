@@ -62,7 +62,13 @@ Make sure you have the following installed:
         php artisan db:seed
         ```
 
-6.  **Run server**
+6.  **Generate OAuth Keys using passport**
+
+    ```bash
+    php artisan passport:keys
+    ```
+
+7.  **Run server**
 
     ```bash
     php artisan serve
