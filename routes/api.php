@@ -10,6 +10,7 @@ use App\Http\Controllers\BusQrController;
 use App\Http\Controllers\PassengerTripController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\ShortestRouteController;
+use App\Http\Controllers\StandardFareController;
 use App\Http\Controllers\TripController;
 
 /*
@@ -43,4 +44,6 @@ Route::middleware('auth:api')->group(function () {
       Route::post('{busId}/update-location', [BusLocationController::class, 'updateLocation']);
       Route::get('get-nearby', [BusLocationController::class, 'getNearbyBuses']);
   });
+
+  Route::apiResource('standard-fares',StandardFareController::class);
 });
