@@ -23,6 +23,7 @@ class Wallet extends Model
         $wallet = self::firstOrCreate(['user_id' => $userId]);
         $wallet->balance += $amount;
         $wallet->save();
+        Transaction::createTransaction($userId, $amount, 'top_up', 'Wallet top-up');
 
         return $wallet;
     }
@@ -35,6 +36,8 @@ class Wallet extends Model
         if ($wallet && $wallet->balance >= $amount) {
             $wallet->balance -= $amount;
             $wallet->save();
+            Transaction::createTransaction($userId, $amount, 'fare_deduction', 'Fare deduction for trip');
+
             return true;
         }
 
