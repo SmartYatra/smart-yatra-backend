@@ -6,7 +6,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\BusController;
 use App\Http\Controllers\BusQrController;
+use App\Http\Controllers\PassengerTripController;
 use App\Http\Controllers\RouteController;
+use App\Http\Controllers\ShortestRouteController;
+use App\Http\Controllers\TripController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,4 +30,12 @@ Route::middleware('auth:api')->group(function () {
    Route::apiResource('buses', BusController::class);
 
    Route::get('/buses/{busId}/qr-data', [BusQrController::class, 'getQrData']);
+
+   Route::post('/trips/scan', [PassengerTripController::class, 'scan']);
+
+   Route::post('/buses/start-trip', [TripController::class, 'startTrip']);
+   Route::post('/buses/end-trip', [TripController::class, 'endTrip']);
+
+   Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
+
 });

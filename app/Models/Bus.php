@@ -14,6 +14,12 @@ class Bus extends Model
         'capacity',
         'status',
         'longitude',
-        'latitude'
+        'latitude',
+        'driver_id'
     ];
+
+    public function driver()
+    {
+        return $this->belongsTo(User::class,'driver_id');
+    }
 }
