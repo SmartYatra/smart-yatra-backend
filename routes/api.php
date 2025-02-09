@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\BusController;
+use App\Http\Controllers\BusLocationController;
 use App\Http\Controllers\BusQrController;
 use App\Http\Controllers\PassengerTripController;
 use App\Http\Controllers\RouteController;
@@ -38,4 +39,6 @@ Route::middleware('auth:api')->group(function () {
 
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
 
+   Route::post('/buses/{busId}/update-location', [BusLocationController::class, 'updateLocation']);
+   Route::get('/buses/nearby', [BusLocationController::class, 'getNearbyBuses']);
 });
