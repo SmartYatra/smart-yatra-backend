@@ -39,6 +39,8 @@ Route::middleware('auth:api')->group(function () {
 
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
 
-   Route::post('/buses/{busId}/update-location', [BusLocationController::class, 'updateLocation']);
-   Route::get('/buses/nearby', [BusLocationController::class, 'getNearbyBuses']);
+   Route::prefix('bus')->group(function() {
+      Route::post('{busId}/update-location', [BusLocationController::class, 'updateLocation']);
+      Route::get('get-nearby', [BusLocationController::class, 'getNearbyBuses']);
+  });
 });
