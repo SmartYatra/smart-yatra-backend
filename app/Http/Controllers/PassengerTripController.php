@@ -10,6 +10,7 @@ use App\Helpers\GeoHelper;
 use App\Http\Controllers\API\BaseController;
 use Illuminate\Support\Facades\Validator;
 use App\Models\StandardFare;
+use App\Models\Wallet;
 
 class PassengerTripController extends BaseController
 {
@@ -44,79 +45,63 @@ class PassengerTripController extends BaseController
             'latitude'=> 'required|numeric',
             'longitude'=> 'required|numeric'
         ]);
-
+    
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 400);
         }
-
+    
         $passengerId = $request->passenger_id;
         $busId = $request->bus_id;
-        $latitude = $request->latitude;
-        $longitude = $request->longitude;
-
-        // Geohash the passenger's current location
-        $geohash = GeoHelper::encodeGeohash($latitude, $longitude, 7); // You can use a higher precision here
-
-        // Retrieve nearby stops with a matching geohash prefix
-        $nearbyStops = Stop::where('geohash', 'like', substr($geohash, 0, 5) . '%')->get(); // 5 characters of the geohash
-
-        if ($nearbyStops->isEmpty()) {
-            return response()->json(['success' => false, 'message' => 'No nearby stops found'], 404);
-        }
-
-        // Initialize variables for finding the nearest stop
-        $nearestStop = null;
-        $minDistance = INF; // Initialize with a large number
-
-        // Iterate over nearby stops to find the one closest to the passenger
-        foreach ($nearbyStops as $stop) {
-            $distance = $this->haversineDistance($latitude, $longitude, $stop->location_lat, $stop->location_lng);
-
-            if ($distance < $minDistance) {
-                $minDistance = $distance;
-                $nearestStop = $stop;
-            }
-        }
-
-        // If no nearest stop found (shouldn't happen with valid data), return an error
-        if (!$nearestStop) {
-            return response()->json(['success' => false, 'message' => 'Could not determine the nearest stop'], 500);
-        }
-
-        // Get the active trip for the bus
+        
+        // Find the active trip for the bus
         $trip = Trip::where('bus_id', $busId)->where('status', 'in_progress')->first();
-
+    
         if (!$trip) {
             return response()->json(['success' => false, 'message' => 'No active trip found for this bus'], 404);
         }
-
+    
+        $stopId = Stop::where('location_lat', $request->latitude)
+                      ->where('location_lng', $request->longitude)
+                      ->first()
+                      ->id;
+    
         // Check if the passenger already has a trip for this bus
         $passengerTrip = PassengerTrip::where('passenger_id', $passengerId)
             ->where('trip_id', $trip->id)
             ->whereNull('alighting_time')
             ->first();
-
+    
         if ($passengerTrip) {
-            // Handle alighting - update alighting details
+            // Handle alighting
+            $fare = $this->calculateFare($passengerTrip->boarding_stop_id, $stopId);
+    
+            // Deduct from the passenger's wallet
+            $deducted = Wallet::deduct($passengerId, $fare);
+    
+            if (!$deducted) {
+                return response()->json(['success' => false, 'message' => 'Insufficient balance to alight'], 400);
+            }
+    
             $passengerTrip->update([
                 'alighting_time' => now(),
-                'alighting_stop_id' => $nearestStop->id,
-                'fare' => $this->calculateFare($passengerTrip->boarding_stop_id, $nearestStop->id),
+                'alighting_stop_id' => $stopId,
+                'fare' => $fare,
             ]);
-
+    
             return response()->json(['success' => true, 'message' => 'Passenger alighted successfully']);
         } else {
-            // Handle boarding - create new passenger trip entry
+            // Handle boarding
             PassengerTrip::create([
                 'passenger_id' => $passengerId,
                 'trip_id' => $trip->id,
                 'boarding_time' => now(),
-                'boarding_stop_id' => $nearestStop->id,
+                'boarding_stop_id' => $stopId,
             ]);
-
+    
             return response()->json(['success' => true, 'message' => 'Passenger boarded successfully']);
         }
     }
+    
 
     // Calculate fare (you can customize this calculation logic as needed)
     public function calculateFare($boardingStopId, $alightingStopId)
