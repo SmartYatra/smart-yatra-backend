@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\BalanceUpdatedNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,6 +29,9 @@ class Wallet extends Model
         $wallet->save();
         Transaction::createTransaction($userId, $amount, 'top_up', 'Wallet top-up');
 
+        // Send a notification to the user
+        $user = $wallet->user;
+        $user->notify(new BalanceUpdatedNotification($wallet->balance));
         return $wallet;
     }
 
@@ -41,6 +45,9 @@ class Wallet extends Model
             $wallet->save();
             Transaction::createTransaction($userId, $amount, 'fare_deduction', 'Fare deduction for trip');
 
+            // Send a notification to the user
+            $user = $wallet->user;
+            $user->notify(new BalanceUpdatedNotification($wallet->balance));
             return true;
         }
 

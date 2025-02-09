@@ -12,6 +12,7 @@ use App\Http\Controllers\RouteController;
 use App\Http\Controllers\ShortestRouteController;
 use App\Http\Controllers\StandardFareController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WalletController;
 
 /*
@@ -52,4 +53,7 @@ Route::middleware('auth:api')->group(function () {
       Route::get('transaction-history',[WalletController::class, 'getTransactionHistory']);
       Route::get('current-balance',[WalletController::class,'getCurrentBalance']);
    });
+
+   Route::get('/users/{userId}/notifications', [UserController::class, 'getNotifications']);
+
 });
