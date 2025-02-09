@@ -12,6 +12,7 @@ use App\Http\Controllers\RouteController;
 use App\Http\Controllers\ShortestRouteController;
 use App\Http\Controllers\StandardFareController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,10 +41,15 @@ Route::middleware('auth:api')->group(function () {
 
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
 
-   Route::prefix('bus')->group(function() {
+   Route::prefix('bus')->group(function () {
       Route::post('{busId}/update-location', [BusLocationController::class, 'updateLocation']);
       Route::get('get-nearby', [BusLocationController::class, 'getNearbyBuses']);
-  });
+   });
 
-  Route::apiResource('standard-fares',StandardFareController::class);
+   Route::apiResource('standard-fares', StandardFareController::class);
+
+   Route::prefix('wallet')->group(function(){
+      Route::get('transaction-history',[WalletController::class, 'getTransactionHistory']);
+      Route::get('current-balance',[WalletController::class,'getCurrentBalance']);
+   });
 });

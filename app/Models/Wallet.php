@@ -10,7 +10,10 @@ class Wallet extends Model
     use HasFactory;
 
     protected $fillable = ['user_id', 'balance'];
-
+    // Make sure balance defaults to 0 if not set
+    protected $attributes = [
+        'balance' => 0,
+    ];
     // A wallet belongs to a user
     public function user()
     {
@@ -44,4 +47,3 @@ class Wallet extends Model
         return false; // Insufficient funds
     }
 }
-
