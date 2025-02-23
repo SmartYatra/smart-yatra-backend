@@ -11,9 +11,11 @@ use App\Http\Controllers\PassengerTripController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\ShortestRouteController;
 use App\Http\Controllers\StandardFareController;
+use App\Http\Controllers\StopController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WalletController;
+use App\Models\StopConnection;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,5 +57,5 @@ Route::middleware('auth:api')->group(function () {
    });
 
    Route::get('/users/{userId}/notifications', [UserController::class, 'getNotifications']);
-
+   Route::get('/stops',[StopController::class,'index']);
 });
