@@ -26,11 +26,14 @@ class ShortestRouteService
         $currentSegment = [];
     
         for ($i = 0; $i < count($path) - 1; $i++) {
-            $stop = $path[$i];
-            $nextStop = $path[$i + 1];
+            $stopId = $path[$i];
+            $nextStopId = $path[$i + 1];
+    
+            $stop = Stop::find($stopId);
+            $nextStop = Stop::find($nextStopId);
     
             // Find the route that connects these two stops
-            $route = $this->findRouteForStops($stop, $nextStop);
+            $route = $this->findRouteForStops($stopId, $nextStopId);
     
             if ($route !== $currentRoute) {
                 // New route detected
@@ -57,6 +60,7 @@ class ShortestRouteService
     
         return $routeDetails;
     }
+    
     
     private function findRouteForStops(int $startStopId, int $endStopId)
     {
