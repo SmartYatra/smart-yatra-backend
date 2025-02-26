@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\API\BaseController;
 use App\Models\Bus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class BusController extends BaseController
@@ -40,7 +41,9 @@ class BusController extends BaseController
         if ($validator->fails()) {
             return $this->sendError('Validation Error', $validator->errors(), 400);
         }
-
+        $user = Auth::user();
+        if($user->type != 'driver')
+            return $this->sendError('Validation Error', "Driver not found or the user is not a driver.",400);
         // Create the bus record
         $bus = Bus::create([
             'bus_number' => $request->bus_number,
@@ -48,6 +51,7 @@ class BusController extends BaseController
             'status' => $request->status,
             'model' => $request->model,
             'capacity' => $request->capacity,
+            'driver_id' => $user->id,
         ]);
 
         return $this->sendResponse($bus, 'Bus created successfully.');
