@@ -33,6 +33,9 @@ Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:api')->group(function () {
    Route::apiResource('routes', RouteController::class);
+   Route::prefix('route')->group(function () {
+      Route::get('get-multiple', [RouteController::class, 'getRoutesByIds']);
+   });
    Route::apiResource('buses', BusController::class);
 
    Route::get('/buses/{busId}/qr-data', [BusQrController::class, 'getQrData']);
@@ -51,11 +54,11 @@ Route::middleware('auth:api')->group(function () {
 
    Route::apiResource('standard-fares', StandardFareController::class);
 
-   Route::prefix('wallet')->group(function(){
-      Route::get('transaction-history',[WalletController::class, 'getTransactionHistory']);
-      Route::get('current-balance',[WalletController::class,'getCurrentBalance']);
+   Route::prefix('wallet')->group(function () {
+      Route::get('transaction-history', [WalletController::class, 'getTransactionHistory']);
+      Route::get('current-balance', [WalletController::class, 'getCurrentBalance']);
    });
 
    Route::get('/users/{userId}/notifications', [UserController::class, 'getNotifications']);
-   Route::get('/stops',[StopController::class,'index']);
+   Route::get('/stops', [StopController::class, 'index']);
 });

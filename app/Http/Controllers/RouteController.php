@@ -78,4 +78,21 @@ class RouteController extends BaseController
         $this->routeService->deleteRoute($route);
         return $this->sendResponse([], 'Route deleted successfully.');
     }
+
+
+    public function getRoutesByIds(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'route_ids' => 'required|array',
+            'route_ids.*' => 'integer|exists:routes,id'
+        ]);
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error', $validator->errors(), 400);
+        }
+
+        // Fetch routes from DB
+        $routes = Route::with('stops')->whereIn('id', $request->route_ids)->get();
+
+        return $this->sendResponse($routes,"Fetched rotues successfully.");
+    }
 }
