@@ -42,8 +42,12 @@ class BusController extends BaseController
             return $this->sendError('Validation Error', $validator->errors(), 400);
         }
         $user = Auth::user();
-        if ($user->type != 'driver')
-            return $this->sendError('Validation Error', "Driver not found or the user is not a driver.", 400);
+        if (!$user || $user->type != 'driver')
+            return $this->sendError('Unauthorized.', "User not found or the user is not a driver.", 403);
+        if ($user->hasBus)
+            return $this->sendError("Conflict", "User already has a bus assigned.", 409);
+
+
         // Create the bus record
         $bus = Bus::create([
             'bus_number' => $request->bus_number,
