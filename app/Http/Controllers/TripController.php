@@ -6,6 +6,7 @@ use App\Http\Controllers\API\BaseController;
 use App\Models\Trip;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class TripController extends BaseController
@@ -13,7 +14,6 @@ class TripController extends BaseController
     public function startTrip(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'driver_id' => 'required|exists:users,id', 
             'route_id' => 'required|exists:routes,id'
         ]);
 
@@ -21,8 +21,8 @@ class TripController extends BaseController
             return response()->json(['success' => false, 'errors' => $validator->errors()], 400);
         }
 
-        $driver = User::find($request->driver_id);
-        if (!$driver) {
+        $driver = Auth::user();
+        if (!$driver || $driver->type != 'driver') {
             return response()->json(['success' => false, 'message' => 'Driver not found'], 404);
         }
 
@@ -53,17 +53,10 @@ class TripController extends BaseController
         return response()->json(['success' => true, 'message' => 'Trip started successfully', 'trip' => $trip]);
     }
 
-    public function endTrip(Request $request)
+    public function endTrip()
     {
-        $validator = Validator::make($request->all(), [
-            'driver_id' => 'required|exists:users,id', 
-        ]);
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 400);
-        }
-
-        $driver = User::find($request->driver_id);
+        $driver = Auth::user();
         if (!$driver) {
             return response()->json(['success' => false, 'message' => 'Driver not found'], 404);
         }
