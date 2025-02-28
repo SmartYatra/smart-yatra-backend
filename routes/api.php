@@ -46,7 +46,7 @@ Route::middleware('auth:api')->group(function () {
 
    Route::prefix('bus')->group(function () {
       Route::post('{busId}/update-location', [BusLocationController::class, 'updateLocation']);
-      Route::get('start-trip', [BusLocationController::class, 'getNearbyBuses']);
+      Route::get('get-nearby', [BusLocationController::class, 'getNearbyBuses']);
       Route::post('start-trip', [TripController::class, 'startTrip']);
       Route::post('end-trip', [TripController::class, 'endTrip']);
    });
