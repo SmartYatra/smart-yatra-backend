@@ -17,7 +17,8 @@ class Bus extends Model
         'longitude',
         'latitude',
         'geohash',
-        'driver_id'
+        'driver_id',
+        'route_id'
     ];
 
     public function driver()
