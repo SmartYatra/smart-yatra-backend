@@ -125,7 +125,7 @@ class BusController extends BaseController
         }
         $bus = $driver->hasBus;
 
-        if ($bus->isEmpty()) {
+        if (!$bus) {
             return $this->sendError('Bus Not Found', [], 404);
         }
 
