@@ -11,6 +11,7 @@ use App\Http\Controllers\API\BaseController;
 use Illuminate\Support\Facades\Validator;
 use App\Models\StandardFare;
 use App\Models\Wallet;
+use Illuminate\Support\Facades\Auth;
 
 class PassengerTripController extends BaseController
 {
@@ -40,12 +41,11 @@ class PassengerTripController extends BaseController
     public function scan(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'passenger_id' => 'required|exists:users,id',
             'bus_id' => 'required|exists:buses,id',
             'latitude'=> 'required|numeric',
             'longitude'=> 'required|numeric'
         ]);
-    
+        $passenger = Auth::user();
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 400);
         }
@@ -66,7 +66,7 @@ class PassengerTripController extends BaseController
                       ->id;
     
         // Check if the passenger already has a trip for this bus
-        $passengerTrip = PassengerTrip::where('passenger_id', $passengerId)
+        $passengerTrip = PassengerTrip::where('passenger_id', $passenger->id)
             ->where('trip_id', $trip->id)
             ->whereNull('alighting_time')
             ->first();
@@ -76,7 +76,7 @@ class PassengerTripController extends BaseController
             $fare = $this->calculateFare($passengerTrip->boarding_stop_id, $stopId);
     
             // Deduct from the passenger's wallet
-            $deducted = Wallet::deduct($passengerId, $fare);
+            $deducted = Wallet::deduct($passenger->id, $fare);
     
             if (!$deducted) {
                 return response()->json(['success' => false, 'message' => 'Insufficient balance to alight'], 400);
@@ -92,7 +92,7 @@ class PassengerTripController extends BaseController
         } else {
             // Handle boarding
             PassengerTrip::create([
-                'passenger_id' => $passengerId,
+                'passenger_id' => $passenger->id,
                 'trip_id' => $trip->id,
                 'boarding_time' => now(),
                 'boarding_stop_id' => $stopId,
