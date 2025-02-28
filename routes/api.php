@@ -38,7 +38,7 @@ Route::middleware('auth:api')->group(function () {
    });
    Route::apiResource('buses', BusController::class);
 
-   Route::get('/buses/{busId}/qr-data', [BusQrController::class, 'getQrData']);
+   Route::get('/buses/qr-data', [BusQrController::class, 'getQrData']);
 
    Route::post('/trips/scan', [PassengerTripController::class, 'scan']);
 
