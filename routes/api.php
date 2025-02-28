@@ -42,14 +42,13 @@ Route::middleware('auth:api')->group(function () {
 
    Route::post('/trips/scan', [PassengerTripController::class, 'scan']);
 
-   Route::post('/buses/start-trip', [TripController::class, 'startTrip']);
-   Route::post('/buses/end-trip', [TripController::class, 'endTrip']);
-
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
 
    Route::prefix('bus')->group(function () {
       Route::post('{busId}/update-location', [BusLocationController::class, 'updateLocation']);
-      Route::get('get-nearby', [BusLocationController::class, 'getNearbyBuses']);
+      Route::get('start-trip', [BusLocationController::class, 'getNearbyBuses']);
+      Route::post('start-trip', [TripController::class, 'startTrip']);
+      Route::post('end-trip', [TripController::class, 'endTrip']);
    });
 
    Route::apiResource('standard-fares', StandardFareController::class);
