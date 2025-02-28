@@ -34,7 +34,7 @@ class BusController extends BaseController
             'bus_number' => 'required|string|max:255',
             'route_id' => 'required|exists:routes,id', // Ensuring route exists
             'model' => 'required|string',
-            'capacity'=> 'required|numeric',
+            'capacity' => 'required|numeric',
             'status' => 'required|in:active,inactive',
         ]);
 
@@ -42,8 +42,8 @@ class BusController extends BaseController
             return $this->sendError('Validation Error', $validator->errors(), 400);
         }
         $user = Auth::user();
-        if($user->type != 'driver')
-            return $this->sendError('Validation Error', "Driver not found or the user is not a driver.",400);
+        if ($user->type != 'driver')
+            return $this->sendError('Validation Error', "Driver not found or the user is not a driver.", 400);
         // Create the bus record
         $bus = Bus::create([
             'bus_number' => $request->bus_number,
@@ -83,7 +83,7 @@ class BusController extends BaseController
             'route_id' => 'required|exists:routes,id',
             'status' => 'required|in:active,inactive',
             'model' => 'required|string',
-            'capacity'=> 'required|numeric',
+            'capacity' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -114,5 +114,21 @@ class BusController extends BaseController
         $bus->delete();
 
         return $this->sendResponse([], 'Bus deleted successfully.');
+    }
+
+    public function getForDriver()
+    {
+        $driver = Auth::user();
+
+        if (!$driver || $driver->type !== 'driver') {
+            return $this->sendError('Bad Request', "User is not a driver", 402);
+        }
+        $bus = $driver->hasBus;
+
+        if ($bus->isEmpty()) {
+            return $this->sendError('Bus Not Found', [], 404);
+        }
+
+        return $this->sendResponse($bus, "Bus retrieved successfully");
     }
 }

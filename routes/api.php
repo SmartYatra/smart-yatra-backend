@@ -49,6 +49,7 @@ Route::middleware('auth:api')->group(function () {
       Route::get('get-nearby', [BusLocationController::class, 'getNearbyBuses']);
       Route::post('start-trip', [TripController::class, 'startTrip']);
       Route::post('end-trip', [TripController::class, 'endTrip']);
+      Route::get('get-for-driver',[BusController::class,'getForDriver']);
    });
 
    Route::apiResource('standard-fares', StandardFareController::class);
