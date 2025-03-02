@@ -28,7 +28,7 @@ class ShortestRouteController extends BaseController
         );
 
         if (empty($shortestRouteDetails)) {
-            return $this->sendError(['success' => false, 'message' => 'No route found.'], 404);
+            return $this->sendResponse(['success' => false, 'data' => [], 'message' => 'No route found.'], 200);
         }
 
         return response()->json([
