@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Stop;
@@ -10,31 +11,31 @@ class ShortestRouteService
     {
         $graph = $this->buildGraph();
         $shortestPath = $this->dijkstra($graph, $startStopId, $endStopId);
-        
+
         if (empty($shortestPath)) {
             return [];
         }
-    
+
         // Now include route details in the path
         return $this->buildRouteDetails($shortestPath);
     }
-    
+
     private function buildRouteDetails(array $path)
     {
         $routeDetails = [];
         $currentRoute = null;
         $currentSegment = [];
-    
+
         for ($i = 0; $i < count($path) - 1; $i++) {
             $stopId = $path[$i];
             $nextStopId = $path[$i + 1];
-    
+
             $stop = Stop::find($stopId);
             $nextStop = Stop::find($nextStopId);
-    
+
             // Find the route that connects these two stops
             $route = $this->findRouteForStops($stopId, $nextStopId);
-    
+
             if ($route !== $currentRoute) {
                 // New route detected
                 if ($currentRoute !== null) {
@@ -46,10 +47,10 @@ class ShortestRouteService
                 $currentRoute = $route;
                 $currentSegment = [$stop];
             }
-    
+
             $currentSegment[] = $nextStop;
         }
-    
+
         // Add the last segment
         if ($currentRoute !== null) {
             $routeDetails[] = [
@@ -57,27 +58,29 @@ class ShortestRouteService
                 'segment' => $currentSegment
             ];
         }
-    
+
         return $routeDetails;
     }
-    
-    
+
+
     private function findRouteForStops(int $startStopId, int $endStopId)
     {
         // Retrieve the route that contains both stops
         $routes = Route::with('stops')->get();
-    
         foreach ($routes as $route) {
             $stops = $route->stops->pluck('id')->toArray();
-    
+
             if (in_array($startStopId, $stops) && in_array($endStopId, $stops)) {
-                return $route->name; // Return the route's name or ID
+                return [
+                    'id' => $route->id,
+                    'name' => $route->name,
+                ];
             }
         }
-    
+
         return null; // Return null if no route is found
     }
-    
+
 
     private function buildGraph()
     {
