@@ -38,8 +38,6 @@ Route::middleware('auth:api')->group(function () {
    });
    Route::apiResource('buses', BusController::class);
 
-   Route::get('/buses/qr-data', [BusQrController::class, 'getQrData']);
-
    Route::post('/trips/scan', [PassengerTripController::class, 'scan']);
 
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
@@ -50,6 +48,8 @@ Route::middleware('auth:api')->group(function () {
       Route::post('start-trip', [TripController::class, 'startTrip']);
       Route::post('end-trip', [TripController::class, 'endTrip']);
       Route::get('get-for-driver',[BusController::class,'getForDriver']);
+      Route::get('qr-data', [BusQrController::class, 'getQrData']);
+
    });
 
    Route::apiResource('standard-fares', StandardFareController::class);
