@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Stop;
 use App\Models\Route;
+use App\Models\StandardFare;
 
 class ShortestRouteService
 {
@@ -16,7 +17,6 @@ class ShortestRouteService
             return [];
         }
 
-        // Now include route details in the path
         return $this->buildRouteDetails($shortestPath);
     }
 
@@ -25,6 +25,7 @@ class ShortestRouteService
         $routeDetails = [];
         $currentRoute = null;
         $currentSegment = [];
+        $totalDistance = 0;
 
         for ($i = 0; $i < count($path) - 1; $i++) {
             $stopId = $path[$i];
@@ -33,29 +34,39 @@ class ShortestRouteService
             $stop = Stop::find($stopId);
             $nextStop = Stop::find($nextStopId);
 
-            // Find the route that connects these two stops
             $route = $this->findRouteForStops($stopId, $nextStopId);
+            $distance = $this->calculateDistance(
+                $stop->location_lat,
+                $stop->location_lng,
+                $nextStop->location_lat,
+                $nextStop->location_lng
+            );
 
             if ($route !== $currentRoute) {
-                // New route detected
                 if ($currentRoute !== null) {
                     $routeDetails[] = [
                         'route' => $currentRoute,
-                        'segment' => $currentSegment
+                        'segment' => $currentSegment,
+                        'distance' => $totalDistance,
+                        'fare'=> $this->getFareForDistance($totalDistance)
                     ];
                 }
                 $currentRoute = $route;
                 $currentSegment = [$stop];
+                $totalDistance = 0;
             }
 
             $currentSegment[] = $nextStop;
+            $totalDistance += $distance;
         }
 
         // Add the last segment
         if ($currentRoute !== null) {
             $routeDetails[] = [
                 'route' => $currentRoute,
-                'segment' => $currentSegment
+                'segment' => $currentSegment,
+                'distance' => $totalDistance,
+                'fare'=> $this->getFareForDistance($totalDistance)
             ];
         }
 
@@ -180,5 +191,20 @@ class ShortestRouteService
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return $earthRadius * $c; // Distance in km
+    }
+
+    private function getFareForDistance($distance)
+    {
+        // Find the standard fare based on the distance range
+        $fare = StandardFare::where('distance_range_start', '<=', $distance)
+            ->where('distance_range_end', '>=', $distance)
+            ->first();
+
+        // If no fare is found, return a default fare (e.g., 0)
+        if (!$fare) {
+            return 15;
+        }
+
+        return $fare->fare;
     }
 }
