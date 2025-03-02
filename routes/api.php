@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\AuthController;
@@ -8,6 +7,7 @@ use App\Http\Controllers\BusController;
 use App\Http\Controllers\BusLocationController;
 use App\Http\Controllers\BusQrController;
 use App\Http\Controllers\PassengerTripController;
+use App\Http\Controllers\PossibleRouteController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\ShortestRouteController;
 use App\Http\Controllers\StandardFareController;
@@ -15,7 +15,6 @@ use App\Http\Controllers\StopController;
 use App\Http\Controllers\TripController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WalletController;
-use App\Models\StopConnection;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +40,7 @@ Route::middleware('auth:api')->group(function () {
    Route::post('/trips/scan', [PassengerTripController::class, 'scan']);
 
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
+   Route::get('/possible-routes', [PossibleRouteController::class, 'getAllRoutes']);
 
    Route::prefix('bus')->group(function () {
       Route::post('{busId}/update-location', [BusLocationController::class, 'updateLocation']);
