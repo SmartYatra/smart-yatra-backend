@@ -43,9 +43,9 @@ class PassengerTripController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'bus_id' => 'required|exists:buses,id',
-            'latitude' => 'optional|numeric',
-            'longitude' => 'optional|numeric',
-            'stop_id' => 'optional|exists:stops,id'
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'stop_id' => 'nullable|exists:stops,id'
         ]);
         $passenger = Auth::user();
         if ($validator->fails()) {
