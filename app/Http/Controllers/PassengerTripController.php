@@ -110,6 +110,10 @@ class PassengerTripController extends BaseController
             // Deduct from the passenger's wallet
             $deducted = Wallet::deduct($passenger->id, $fare);
 
+            //add the deducted amount to the bus trip income
+            $busTrip = $passengerTrip->trip;
+            $busTrip->increment('total_fare_collected', $fare);
+
             if (!$deducted) {
                 return response()->json(['success' => false, 'message' => 'Insufficient balance to alight'], 400);
             }
@@ -130,6 +134,9 @@ class PassengerTripController extends BaseController
                 'boarding_stop_id' => $stopId,
             ]);
 
+            //increase the passenger count for the bus on boarding
+            $trip->increment('current_passenger_count');
+            $trip->increment('total_passenger_count');            
             return response()->json(['success' => true, 'message' => 'Passenger boarded successfully']);
         }
     }
