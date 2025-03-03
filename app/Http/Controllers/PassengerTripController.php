@@ -172,4 +172,32 @@ class PassengerTripController extends BaseController
 
         return $fare->fare;
     }
+
+    public function status()
+    {
+        $passenger = Auth::user();
+        if (!$passenger) {
+            return $this->sendResponse(['success' => false, 'message' => 'Passenger not found'], 400);
+        }
+
+
+        // Find the active trip for the bus
+        $trip = PassengerTrip::where('passenger_id', $passenger->id)
+        ->whereNotNull('boarding_time')
+        ->whereNull('alighting_time')
+        ->orderBy('boarding_time','desc')
+        ->first();
+
+        if (!$trip) {
+            return $this->sendResponse([], "Trip  Not found.");
+        }
+        $data = [
+            'boarding_time' => $trip->boarding_time,
+            'alighting_time' => $trip->alighting_time,
+            'boarding_stop' => $trip->boardingStop->name ?? null,
+            'alighting_stop' => $trip->alightingStop ? $trip->alightingStop->name : null,
+            'bus' => $trip->trip ? $trip->trip->bus : null
+        ];
+        return $this->sendResponse($data, "Trip found.");
+    }
 }

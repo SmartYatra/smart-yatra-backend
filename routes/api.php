@@ -38,6 +38,7 @@ Route::middleware('auth:api')->group(function () {
    Route::apiResource('buses', BusController::class);
 
    Route::post('/trips/scan', [PassengerTripController::class, 'scan']);
+   Route::get('/trips/status', [PassengerTripController::class, 'status']);
 
    Route::get('/shortest-route', [ShortestRouteController::class, 'findShortestRoute']);
    Route::get('/possible-routes', [PossibleRouteController::class, 'getAllRoutes']);
