@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\StandardFare;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon as Carbon;
 
 class PassengerTripController extends BaseController
 {
@@ -114,7 +115,7 @@ class PassengerTripController extends BaseController
             }
 
             $passengerTrip->update([
-                'alighting_time' => now(),
+                'alighting_time' => Carbon::now()->toIso8601String(),
                 'alighting_stop_id' => $stopId,
                 'fare' => $fare,
             ]);
@@ -125,7 +126,7 @@ class PassengerTripController extends BaseController
             PassengerTrip::create([
                 'passenger_id' => $passenger->id,
                 'trip_id' => $trip->id,
-                'boarding_time' => now(),
+                'boarding_time' => Carbon::now()->toIso8601String(),
                 'boarding_stop_id' => $stopId,
             ]);
 
