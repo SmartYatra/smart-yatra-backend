@@ -43,8 +43,9 @@ class PassengerTripController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'bus_id' => 'required|exists:buses,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric'
+            'latitude' => 'optional|numeric',
+            'longitude' => 'optional|numeric',
+            'stop_id' => 'optional|exists:stops,id'
         ]);
         $passenger = Auth::user();
         if ($validator->fails()) {
@@ -60,32 +61,41 @@ class PassengerTripController extends BaseController
             return response()->json(['success' => false, 'message' => 'No active trip found for this bus'], 404);
         }
 
-        $userGoeHash = GeoHelper::encodeGeohash($request->latitude, $request->longitude);
-        //find stops in same geohash
-        $stops = Stop::where('geohash', 'LIKE', $userGoeHash . '%')->get();
-        $closestStop = null;
-        $minDistance = PHP_FLOAT_MAX;
+        if ($request->latitude && $request->longitude) {
+            $userGoeHash = GeoHelper::encodeGeohash($request->latitude, $request->longitude);
+            //find stops in same geohash
+            $stops = Stop::where('geohash', 'LIKE', $userGoeHash . '%')->get();
+            $closestStop = null;
+            $minDistance = PHP_FLOAT_MAX;
 
-        //if multiple stops choose the closest one using
-        foreach ($stops as $stop) {
-            $distance = $this->haversineDistance(
-                $request->latitude,
-                $request->longitude,
-                $stop->location_lat,
-                $stop->location_lng
-            );
+            //if multiple stops choose the closest one using
+            foreach ($stops as $stop) {
+                $distance = $this->haversineDistance(
+                    $request->latitude,
+                    $request->longitude,
+                    $stop->location_lat,
+                    $stop->location_lng
+                );
 
-            if ($distance <= 1 && $distance < $minDistance) {
-                $minDistance = $distance;
-                $closestStop = $stop;
+                if ($distance <= 1 && $distance < $minDistance) {
+                    $minDistance = $distance;
+                    $closestStop = $stop;
+                }
             }
+            if (!$closestStop) {
+                return $this->sendError("Couldn't Determine Stop near the location", 400);
+            }
+            $stopId = $closestStop->id;
+
         }
-        if(!$closestStop)
-        {
-            return $this->sendError("Couldn't Determine Stop near the location",404);
+        else if($request->stop_id){
+            $stopId = $request->stop_id;
+        }
+        else{
+            return $this->sendError("Either stop id or location is required.", 400);
+
         }
 
-        $stopId = $closestStop->id;
         // Check if the passenger already has a trip for this bus
         $passengerTrip = PassengerTrip::where('passenger_id', $passenger->id)
             ->where('trip_id', $trip->id)
