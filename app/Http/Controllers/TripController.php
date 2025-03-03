@@ -82,4 +82,27 @@ class TripController extends BaseController
 
         return response()->json(['success' => true, 'message' => 'Trip ended successfully']);
     }
+    public function tripStatus()
+    {
+        $driver = Auth::user();
+        if (!$driver) {
+            return response()->json(['success' => false, 'message' => 'Driver not found'], 404);
+        }
+
+        if (!$driver->hasBus) {
+            return response()->json(['success' => false, 'message' => 'Driver is not assigned to any bus'], 400);
+        }
+
+        $busId = $driver->hasBus->id;
+
+        // Find the active trip for the bus
+        $trip = Trip::where('bus_id', $busId)->where('status', 'in_progress')->first();
+
+        if (!$trip) {
+            return response()->json(['success' => false, 'message' => 'No active trip found for this bus'], 404);
+        }
+
+
+        return $this->sendResponse($trip, "Trip found.");
+    }
 }
