@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class TripController extends BaseController
 {
@@ -42,13 +43,14 @@ class TripController extends BaseController
         $trip = Trip::create([
             'bus_id' => $busId,
             'route_id' => $request->route_id,
-            'start_time' => now(),
+            'start_time' => Carbon::now()->toIso8601String(),
             'status' => 'in_progress',
             'current_passenger_count' => 0,
             'total_passenger_count' => 0,
             'total_fare_collected' => 0,
             'distance_traveled' => 0
         ]);
+
 
         return response()->json(['success' => true, 'message' => 'Trip started successfully', 'trip' => $trip]);
     }
@@ -76,7 +78,7 @@ class TripController extends BaseController
 
         // End the trip
         $trip->update([
-            'end_time' => now(),
+            'end_time' => Carbon::now()->toIso8601String(),
             'status' => 'completed',
         ]);
 
@@ -102,7 +104,8 @@ class TripController extends BaseController
             return $this->sendResponse([], "Trip  Not found.");
         }
 
-
+        $trip->start_time = $trip->start_time ? Carbon::parse($trip->start_time)->toIso8601String() : null;
+        $trip->end_time = $trip->end_time ? Carbon::parse($trip->end_time)->toIso8601String() : null;
         return $this->sendResponse($trip, "Trip found.");
     }
 }
