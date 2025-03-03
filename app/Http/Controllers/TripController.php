@@ -99,7 +99,7 @@ class TripController extends BaseController
         $trip = Trip::where('bus_id', $busId)->where('status', 'in_progress')->first();
 
         if (!$trip) {
-            return response()->json(['success' => false, 'message' => 'No active trip found for this bus'], 404);
+            return $this->sendResponse([], "Trip  Not found.");
         }
 
 
