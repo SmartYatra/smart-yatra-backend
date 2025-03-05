@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Bus::class,'driver_id');
     }
+
+    public function hasWallet()
+    {
+        return $this->hasOne(Wallet::class,'user_id');
+    }
 }
