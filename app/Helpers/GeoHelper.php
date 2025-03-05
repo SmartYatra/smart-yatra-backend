@@ -18,7 +18,7 @@ class GeoHelper
     public static function encodeGeohash($latitude, $longitude, $precision = 7)
     {
         // Define latitude and longitude range limits
-        $latRange = [-90.0, 90.0];  
+        $latRange = [-90.0, 90.0];
         $lonRange = [-180.0, 180.0];
 
         $bit = 0;       // Keeps track of bit position in 5-bit chunks
@@ -61,5 +61,26 @@ class GeoHelper
         }
 
         return $geohash;
+    }
+
+    // Haversine formula to calculate the distance between two geographical points
+    public static function haversineDistance($lat1, $lng1, $lat2, $lng2)
+    {
+        $earthRadius = 6371; // Radius of Earth in kilometers
+        $latFrom = deg2rad($lat1);
+        $lngFrom = deg2rad($lng1);
+        $latTo = deg2rad($lat2);
+        $lngTo = deg2rad($lng2);
+
+        $latDiff = $latTo - $latFrom;
+        $lngDiff = $lngTo - $lngFrom;
+
+        $a = sin($latDiff / 2) * sin($latDiff / 2) +
+            cos($latFrom) * cos($latTo) *
+            sin($lngDiff / 2) * sin($lngDiff / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c; // Returns the distance in kilometers
     }
 }

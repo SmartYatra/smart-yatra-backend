@@ -39,7 +39,7 @@ class StopController extends BaseController
 
         // Calculate distances and append them to results
         $stopsWithDistance = $nearbyStops->map(function ($stop) use ($latitude, $longitude) {
-            $distance = $this->haversineDistance($latitude, $longitude, $stop->location_lat, $stop->location_lng);
+            $distance = GeoHelper::haversineDistance($latitude, $longitude, $stop->location_lat, $stop->location_lng);
             $stop->distance = $distance; // Round to 2 decimal places
             return $stop;
         });
@@ -50,25 +50,4 @@ class StopController extends BaseController
         return $this->sendResponse($sortedStops, 'Nearby stops retrieved successfully');
     }
 
-
-    // Haversine formula to calculate the distance between two geographical points
-    public function haversineDistance($lat1, $lng1, $lat2, $lng2)
-    {
-        $earthRadius = 6371; // Radius of Earth in kilometers
-        $latFrom = deg2rad($lat1);
-        $lngFrom = deg2rad($lng1);
-        $latTo = deg2rad($lat2);
-        $lngTo = deg2rad($lng2);
-
-        $latDiff = $latTo - $latFrom;
-        $lngDiff = $lngTo - $lngFrom;
-
-        $a = sin($latDiff / 2) * sin($latDiff / 2) +
-            cos($latFrom) * cos($latTo) *
-            sin($lngDiff / 2) * sin($lngDiff / 2);
-
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c; // Returns the distance in kilometers
-    }
 }

@@ -16,27 +16,6 @@ use Carbon\Carbon as Carbon;
 
 class PassengerTripController extends BaseController
 {
-    // Haversine formula to calculate the distance between two geographical points
-    public function haversineDistance($lat1, $lng1, $lat2, $lng2)
-    {
-        $earthRadius = 6371; // Radius of Earth in kilometers
-
-        $latFrom = deg2rad($lat1);
-        $lngFrom = deg2rad($lng1);
-        $latTo = deg2rad($lat2);
-        $lngTo = deg2rad($lng2);
-
-        $latDiff = $latTo - $latFrom;
-        $lngDiff = $lngTo - $lngFrom;
-
-        $a = sin($latDiff / 2) * sin($latDiff / 2) +
-            cos($latFrom) * cos($latTo) *
-            sin($lngDiff / 2) * sin($lngDiff / 2);
-
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c; // Returns the distance in kilometers
-    }
 
     // Scan method for boarding or alighting a passenger
     public function scan(Request $request)
@@ -71,7 +50,7 @@ class PassengerTripController extends BaseController
 
             //if multiple stops choose the closest one using
             foreach ($stops as $stop) {
-                $distance = $this->haversineDistance(
+                $distance = GeoHelper::haversineDistance(
                     $request->latitude,
                     $request->longitude,
                     $stop->location_lat,
@@ -153,7 +132,7 @@ class PassengerTripController extends BaseController
             return 0;
         }
 
-        $distance = $this->haversineDistance(
+        $distance = GeoHelper::haversineDistance(
             $boardingStop->location_lat,
             $boardingStop->location_lng,
             $alightingStop->location_lat,
