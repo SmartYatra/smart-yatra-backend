@@ -199,8 +199,8 @@ class PassengerTripController extends BaseController
             return $this->sendResponse([], "Trip  Not found.");
         }
         $data = [
-            'boarding_time' => $trip->boarding_time,
-            'alighting_time' => $trip->alighting_time,
+            'boarding_time' => $trip->boarding_time ? Carbon::parse($trip->boarding_time)->toIso8601String() : null,
+            'alighting_time' => $trip->alighting_time ? Carbon::parse($trip->alighting_time)->toIso8601String() : null,
             'boarding_stop' => $trip->boardingStop->name ?? null,
             'alighting_stop' => $trip->alightingStop ? $trip->alightingStop->name : null,
             'bus' => $trip->trip ? $trip->trip->bus : null
