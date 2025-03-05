@@ -63,7 +63,10 @@ Route::middleware('auth:api')->group(function () {
    });
 
    Route::get('/users/{userId}/notifications', [UserController::class, 'getNotifications']);
-   Route::get('/stops', [StopController::class, 'index']);
+   Route::prefix('stops')->group(function(){
+      Route::get('', [StopController::class, 'index']);
+      Route::get('get-nearby',[StopController::class,'getNearbyStops']);
+   });
 
    Route::get('/user/balance',[BalanceController::class,'getBalance']);
 });
