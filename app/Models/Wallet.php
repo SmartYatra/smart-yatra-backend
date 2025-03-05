@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Notifications\BalanceUpdatedNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Wallet extends Model
 {
@@ -53,4 +54,43 @@ class Wallet extends Model
 
         return false; // Insufficient funds
     }
+
+    public static function transfer($fromUserId, $toUserId, $amount)
+    {
+        DB::beginTransaction(); // Start transaction
+    
+        try {
+            // Fetch sender's wallet
+            $senderWallet = self::where('user_id', $fromUserId)->first();
+            // Ensure sender has enough balance
+            if (!$senderWallet || $senderWallet->balance < $amount) {
+                throw new \Exception("Insufficient balance");
+            }
+    
+            // Deduct from sender
+            $senderWallet->balance -= $amount;
+            $senderWallet->save();
+            // Create transaction for sender
+            Transaction::createTransaction($fromUserId, $amount, 'fare_deduction', "Fare Deduction.");
+            // Fetch or create receiver's wallet
+            $receiverWallet = self::firstOrCreate(['user_id' => $toUserId]);
+            // Add to receiver
+            $receiverWallet->balance += $amount;
+            $receiverWallet->save();
+            
+            // Create transaction for receiver
+            Transaction::createTransaction($toUserId, $amount, 'fare_collection', "Fare collected.");
+    
+            // Send notifications
+            $senderWallet->user->notify(new BalanceUpdatedNotification($senderWallet->balance));
+            $receiverWallet->user->notify(new BalanceUpdatedNotification($receiverWallet->balance));
+    
+            DB::commit(); // Commit transaction
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack(); // Rollback on failure
+            return false;
+        }
+    }
+    
 }

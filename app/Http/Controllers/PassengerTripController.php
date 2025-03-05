@@ -8,6 +8,7 @@ use App\Models\PassengerTrip;
 use App\Models\Trip;
 use App\Helpers\GeoHelper;
 use App\Http\Controllers\API\BaseController;
+use App\Models\Bus;
 use Illuminate\Support\Facades\Validator;
 use App\Models\StandardFare;
 use App\Models\Wallet;
@@ -86,8 +87,12 @@ class PassengerTripController extends BaseController
             // Handle alighting
             $fare = $this->calculateFare($passengerTrip->boarding_stop_id, $stopId);
 
+            //find the driver
+            $bus = Bus::find($busId);
+            if($bus)
+                $driver = $bus->driver;
             // Deduct from the passenger's wallet
-            $deducted = Wallet::deduct($passenger->id, $fare);
+            $deducted = Wallet::transfer($passenger->id, $driver->id,$fare);
 
             //add the deducted amount to the bus trip income
             $busTrip = $passengerTrip->trip;
@@ -102,7 +107,8 @@ class PassengerTripController extends BaseController
                 'alighting_stop_id' => $stopId,
                 'fare' => $fare,
             ]);
-
+            //decrease current passenger count when alighting
+            $trip->decrement('current_passenger_count');
             return response()->json(['success' => true, 'message' => 'Passenger alighted successfully']);
         } else {
             // Handle boarding
@@ -138,7 +144,6 @@ class PassengerTripController extends BaseController
             $alightingStop->location_lat,
             $alightingStop->location_lng
         );
-
         $fare = $this->getFareForDistance($distance);
         return round($fare, 2); // Return the fare rounded to two decimal places
     }
