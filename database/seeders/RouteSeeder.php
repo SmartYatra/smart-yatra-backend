@@ -5,11 +5,22 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Route;
 use App\Models\Stop;
+use Illuminate\Support\Facades\DB;
 
 class RouteSeeder extends Seeder
 {
     public function run()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        // Truncate the related tables
+        DB::table('route_stop')->truncate(); // Pivot table for the relationship
+        Route::truncate(); // Truncate the 'routes' table
+        Stop::truncate(); // Truncate the 'stops' table
+
+        // Optional: Re-enable foreign key checks after truncating
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $routes = [
             [
                 'name' => 'Lagankhel - Gongabu New Bus Park',
@@ -229,9 +240,11 @@ class RouteSeeder extends Seeder
             foreach ($routeData['stops'] as $stopData) {
                 $stop = Stop::firstOrCreate([
                     'name' => $stopData['name'],
-                    'location_lat' => $stopData['location_lat'],
-                    'location_lng' => $stopData['location_lng'],
-                ]);
+                ],
+            [
+                'location_lat'=> $stopData['location_lat'],
+                'location_lng'=> $stopData['location_lng']
+            ]);
                 $route->stops()->attach($stop->id, ['order' => $stopData['order']]);
             }
         }

@@ -13,7 +13,7 @@ class BalanceController extends BaseController
         if (!$user) {
             return $this->sendResponse(['success' => false, 'message' => 'Passenger not found'], 400);
         }        
-        $balance = $user->wallet ? $user->wallet->balance : 0;
+        $balance = $user->hasWallet ? $user->hasWallet->balance : 0;
         return $this->sendResponse(['success'=>true,'balance'=>$balance, 'message' => 'Balance Retrieved Successfully'],200);
     }
 }
