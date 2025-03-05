@@ -10,10 +10,17 @@ class BalanceController extends BaseController
     public function getBalance()
     {
         $user = Auth::user();
+        
+        // Check if the user exists
         if (!$user) {
-            return $this->sendResponse(['success' => false, 'message' => 'Passenger not found'], 400);
-        }        
+            return $this->sendError('Passenger not found', [], 400);
+        }
+
+        // Get balance or set to 0 if no wallet exists
         $balance = $user->hasWallet ? $user->hasWallet->balance : 0;
-        return $this->sendResponse(['success'=>true,'balance'=>$balance, 'message' => 'Balance Retrieved Successfully'],200);
+        
+        // Return the balance as part of the response
+        return $this->sendResponse(['balance' => $balance], 'Balance Retrieved Successfully.');
     }
 }
+
