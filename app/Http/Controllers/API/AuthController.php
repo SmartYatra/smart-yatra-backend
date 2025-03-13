@@ -48,7 +48,7 @@ class AuthController extends BaseController
                 'type' => $input['user_type']
             ]);
 
-            if($user->type = 'user')
+            if($user->type == 'user')
             {
                Wallet::topUp($user->id,1000);
             }
