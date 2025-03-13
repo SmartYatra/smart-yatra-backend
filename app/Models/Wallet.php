@@ -14,7 +14,7 @@ class Wallet extends Model
     protected $fillable = ['user_id', 'balance'];
     // Make sure balance defaults to 0 if not set
     protected $attributes = [
-        'balance' => 0,
+        'balance' => 1000,
     ];
     // A wallet belongs to a user
     public function user()
