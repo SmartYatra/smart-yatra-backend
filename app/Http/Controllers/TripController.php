@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\API\BaseController;
 use App\Models\Trip;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -81,6 +82,26 @@ class TripController extends BaseController
             'end_time' => Carbon::now()->toIso8601String(),
             'status' => 'completed',
         ]);
+
+        $passengerTrips = $trip->passengerTrips()
+            ->whereNotNull('boarding_time')
+            ->whereNull('alighting_time')
+            ->get();
+        if ($passengerTrips->isNotEmpty()) {
+            foreach ($passengerTrips as $passengerTrip) {
+                $user = $passengerTrip->passenger; // Assuming there is a 'user' relationship in the PassengerTrip model
+
+                if ($user && $user->hasWallet->balance > 50 ) {
+                    Wallet::transfer($user->id,$driver->id,50);
+                }
+                else if ($user->hasWallet->balance < 50)
+                {
+                    $user->active = false;
+                    $user->save();
+                }
+            }
+        }
+
 
         return response()->json(['success' => true, 'message' => 'Trip ended successfully']);
     }

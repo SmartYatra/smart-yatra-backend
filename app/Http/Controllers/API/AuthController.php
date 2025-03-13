@@ -48,9 +48,8 @@ class AuthController extends BaseController
                 'type' => $input['user_type']
             ]);
 
-            if($user->type == 'user')
-            {
-               Wallet::topUp($user->id,1000);
+            if ($user->type == 'user') {
+                Wallet::topUp($user->id, 1000);
             }
             $success = [
                 'token' => $user->createToken('MyApp')->accessToken,
@@ -95,12 +94,19 @@ class AuthController extends BaseController
 
             if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
                 $user = Auth::user();
-                $success = [
-                    'token' => $user->createToken('MyApp')->accessToken,
-                    'name' => $user->name,
-                    'type' => $user->type,
-                ];
-
+                if ($user->active) {
+                    $success = [
+                        'token' => $user->createToken('MyApp')->accessToken,
+                        'name' => $user->name,
+                        'type' => $user->type,
+                    ];
+                } else {
+                    return $this->sendError(
+                        'Unauthorized.',
+                        ['error' => 'User account disabled.'],
+                        401
+                    );
+                }
                 return $this->sendResponse($success, 'User logged in successfully.');
             } else {
                 return $this->sendError(
