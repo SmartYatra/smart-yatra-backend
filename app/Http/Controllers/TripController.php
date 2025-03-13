@@ -108,4 +108,31 @@ class TripController extends BaseController
         $trip->end_time = $trip->end_time ? Carbon::parse($trip->end_time)->toIso8601String() : null;
         return $this->sendResponse($trip, "Trip found.");
     }
+    public function tripHistory()
+    {
+        $driver = Auth::user();
+        if (!$driver) {
+            return response()->json(['success' => false, 'message' => 'Driver not found'], 404);
+        }
+
+        if (!$driver->hasBus) {
+            return response()->json(['success' => false, 'message' => 'Driver is not assigned to any bus'], 400);
+        }
+
+        $busId = $driver->hasBus->id;
+
+        // Find the active trip for the bus
+        $trips = Trip::where('bus_id', $busId)->orderBy('start_time')->get();
+
+        if (!$trips) {
+            return $this->sendResponse([], "No trips found");
+        }
+        // Convert start_time and end_time to ISO format
+        $trips->transform(function ($trip) {
+            $trip->start_time = $trip->start_time ? Carbon::parse($trip->start_time)->toIso8601String() : null;
+            $trip->end_time = $trip->end_time ? Carbon::parse($trip->end_time)->toIso8601String() : null;
+            return $trip;
+        });
+        return $this->sendResponse($trips, "Trips found.");
+    }
 }

@@ -50,6 +50,7 @@ Route::middleware('auth:api')->group(function () {
       Route::post('start-trip', [TripController::class, 'startTrip']);
       Route::post('end-trip', [TripController::class, 'endTrip']);
       Route::get('trip-status', [TripController::class, 'tripStatus']);
+      Route::get('trip-history', [TripController::class, 'tripHistory']);
       Route::get('get-for-driver',[BusController::class,'getForDriver']);
       Route::get('qr-data', [BusQrController::class, 'getQrData']);
 
