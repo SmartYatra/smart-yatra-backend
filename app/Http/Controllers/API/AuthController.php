@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Http\Requests\RegistrationRequest;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Support\Facades\Auth;
 use Validator;
 use Illuminate\Http\JsonResponse;
@@ -47,7 +48,10 @@ class AuthController extends BaseController
                 'type' => $input['user_type']
             ]);
 
-
+            if($user->type = 'user')
+            {
+               Wallet::topUp($user->id,1000);
+            }
             $success = [
                 'token' => $user->createToken('MyApp')->accessToken,
                 'name' => $user->name,
