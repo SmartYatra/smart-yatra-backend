@@ -40,8 +40,15 @@ class PassengerTripController extends BaseController
         // Find the active trip for the bus
         $trip = Trip::where('bus_id', $busId)->where('status', 'in_progress')->first();
 
+
         if (!$trip) {
             return response()->json(['success' => false, 'message' => 'No active trip found for this bus'], 404);
+        }
+        $route = $trip->route;
+        $stops = $route->stops->pluck('id'); // Get only the stop IDs as a collection
+
+        if (!$stops->contains($request->stop_id)) {
+            return response()->json(['success' => false, 'message' => 'Invalid stop'], 400);
         }
 
         if ($request->latitude && $request->longitude) {
@@ -93,7 +100,7 @@ class PassengerTripController extends BaseController
             $deducted = Wallet::transfer($passenger->id, $driver->id, $fare * $passengerTrip->passenger_count);
             //add the deducted amount to the bus trip income
             $busTrip = $passengerTrip->trip;
-            $busTrip->increment('total_fare_collected', $fare* $passengerTrip->passenger_count);
+            $busTrip->increment('total_fare_collected', $fare * $passengerTrip->passenger_count);
 
             if (!$deducted) {
                 return response()->json(['success' => false, 'message' => 'Insufficient balance to alight'], 400);
@@ -118,8 +125,8 @@ class PassengerTripController extends BaseController
             ]);
 
             //increase the passenger count for the bus on boarding
-            $trip->increment('current_passenger_count',$passengerCount);
-            $trip->increment('total_passenger_count',$passengerCount);
+            $trip->increment('current_passenger_count', $passengerCount);
+            $trip->increment('total_passenger_count', $passengerCount);
             return response()->json(['success' => true, 'message' => 'Passenger boarded successfully']);
         }
     }
