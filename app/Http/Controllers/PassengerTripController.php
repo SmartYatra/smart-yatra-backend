@@ -84,14 +84,13 @@ class PassengerTripController extends BaseController
         if ($passengerTrip) {
             // Handle alighting
             $fare = $this->calculateFare($passengerTrip->boarding_stop_id, $stopId);
-
             //find the driver
             $bus = Bus::find($busId);
             if ($bus)
                 $driver = $bus->driver;
             // Deduct from the passenger's wallet
-            $deducted = Wallet::transfer($passenger->id, $driver->id, $fare * $passengerTrip->passenger_count);
 
+            $deducted = Wallet::transfer($passenger->id, $driver->id, $fare * $passengerTrip->passenger_count);
             //add the deducted amount to the bus trip income
             $busTrip = $passengerTrip->trip;
             $busTrip->increment('total_fare_collected', $fare* $passengerTrip->passenger_count);
@@ -186,6 +185,7 @@ class PassengerTripController extends BaseController
             'alighting_time' => $trip->alighting_time ? Carbon::parse($trip->alighting_time)->toIso8601String() : null,
             'boarding_stop' => $trip->boardingStop->name ?? null,
             'alighting_stop' => $trip->alightingStop ? $trip->alightingStop->name : null,
+            'passenger_count' => $trip->passenger_count,
             'bus' => $trip->trip ? $trip->trip->bus : null
         ];
         return $this->sendResponse($data, "Trip found.");
