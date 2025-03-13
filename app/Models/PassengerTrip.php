@@ -17,6 +17,7 @@ class PassengerTrip extends Model
         'boarding_stop_id',
         'alighting_stop_id',
         'fare',
+        'passenger_count'
     ];
 
     // Relationships

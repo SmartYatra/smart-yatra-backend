@@ -26,8 +26,10 @@ class PassengerTripController extends BaseController
             'bus_id' => 'required|exists:buses,id',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
-            'stop_id' => 'nullable|exists:stops,id'
+            'stop_id' => 'nullable|exists:stops,id',
+            'passenger_count' => 'nullable|integer|min:1'
         ]);
+        $passengerCount = $request->passenger_count ?? 1;
         $passenger = Auth::user();
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 400);
@@ -67,14 +69,10 @@ class PassengerTripController extends BaseController
                 return $this->sendError("Couldn't Determine Stop near the location", 400);
             }
             $stopId = $closestStop->id;
-
-        }
-        else if($request->stop_id){
+        } else if ($request->stop_id) {
             $stopId = $request->stop_id;
-        }
-        else{
+        } else {
             return $this->sendError("Either stop id or location is required.", 400);
-
         }
 
         // Check if the passenger already has a trip for this bus
@@ -89,14 +87,14 @@ class PassengerTripController extends BaseController
 
             //find the driver
             $bus = Bus::find($busId);
-            if($bus)
+            if ($bus)
                 $driver = $bus->driver;
             // Deduct from the passenger's wallet
-            $deducted = Wallet::transfer($passenger->id, $driver->id,$fare);
+            $deducted = Wallet::transfer($passenger->id, $driver->id, $fare * $passengerTrip->passenger_count);
 
             //add the deducted amount to the bus trip income
             $busTrip = $passengerTrip->trip;
-            $busTrip->increment('total_fare_collected', $fare);
+            $busTrip->increment('total_fare_collected', $fare* $passengerTrip->passenger_count);
 
             if (!$deducted) {
                 return response()->json(['success' => false, 'message' => 'Insufficient balance to alight'], 400);
@@ -105,10 +103,10 @@ class PassengerTripController extends BaseController
             $passengerTrip->update([
                 'alighting_time' => Carbon::now()->toIso8601String(),
                 'alighting_stop_id' => $stopId,
-                'fare' => $fare,
+                'fare' => $fare * $passengerTrip->passenger_count,
             ]);
             //decrease current passenger count when alighting
-            $trip->decrement('current_passenger_count');
+            $trip->decrement('current_passenger_count', $passengerTrip->passenger_count);
             return response()->json(['success' => true, 'message' => 'Passenger alighted successfully']);
         } else {
             // Handle boarding
@@ -117,11 +115,12 @@ class PassengerTripController extends BaseController
                 'trip_id' => $trip->id,
                 'boarding_time' => Carbon::now()->toIso8601String(),
                 'boarding_stop_id' => $stopId,
+                'passenger_count' => $passengerCount,
             ]);
 
             //increase the passenger count for the bus on boarding
-            $trip->increment('current_passenger_count');
-            $trip->increment('total_passenger_count');            
+            $trip->increment('current_passenger_count',$passengerCount);
+            $trip->increment('total_passenger_count',$passengerCount);
             return response()->json(['success' => true, 'message' => 'Passenger boarded successfully']);
         }
     }
@@ -174,10 +173,10 @@ class PassengerTripController extends BaseController
 
         // Find the active trip for the bus
         $trip = PassengerTrip::where('passenger_id', $passenger->id)
-        ->whereNotNull('boarding_time')
-        ->whereNull('alighting_time')
-        ->orderBy('boarding_time','desc')
-        ->first();
+            ->whereNotNull('boarding_time')
+            ->whereNull('alighting_time')
+            ->orderBy('boarding_time', 'desc')
+            ->first();
 
         if (!$trip) {
             return $this->sendResponse([], "Trip  Not found.");
